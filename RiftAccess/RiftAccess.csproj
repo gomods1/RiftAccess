@@ -1,0 +1,60 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>10.0</LangVersion>
+    <AssemblyName>RiftAccess</AssemblyName>
+    <RootNamespace>RiftAccess</RootNamespace>
+    <Version>0.1.0</Version>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <DebugType>none</DebugType>
+    <NoWarn>$(NoWarn);CS0649;CS0169;CS0618</NoWarn>
+
+    <GamePath Condition="'$(GAME_PATH)' != ''">$(GAME_PATH)</GamePath>
+    <GamePath Condition="'$(GamePath)' == ''">S:\steam\steamapps\common\RiftOfTheNecroDancerOSTVolume1</GamePath>
+    <ManagedPath>$(GamePath)\RiftOfTheNecroDancer_Data\Managed</ManagedPath>
+    <PrismPath>$(MSBuildProjectDirectory)\..\vendor\prism</PrismPath>
+    <SoundsPath>$(MSBuildProjectDirectory)\..\sounds\cues</SoundsPath>
+    <PluginDir>$(GamePath)\BepInEx\plugins\RiftAccess</PluginDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="BepInEx"><HintPath>$(GamePath)\BepInEx\core\BepInEx.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="0Harmony"><HintPath>$(GamePath)\BepInEx\core\0Harmony.dll</HintPath><Private>false</Private></Reference>
+
+    <Reference Include="UnityEngine"><HintPath>$(ManagedPath)\UnityEngine.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(ManagedPath)\UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.UI"><HintPath>$(ManagedPath)\UnityEngine.UI.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.UIModule"><HintPath>$(ManagedPath)\UnityEngine.UIModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.TextRenderingModule"><HintPath>$(ManagedPath)\UnityEngine.TextRenderingModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.InputLegacyModule"><HintPath>$(ManagedPath)\UnityEngine.InputLegacyModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.ImageConversionModule"><HintPath>$(ManagedPath)\UnityEngine.ImageConversionModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.ScreenCaptureModule"><HintPath>$(ManagedPath)\UnityEngine.ScreenCaptureModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Unity.TextMeshPro"><HintPath>$(ManagedPath)\Unity.TextMeshPro.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Unity.InputSystem"><HintPath>$(ManagedPath)\Unity.InputSystem.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Unity.Mathematics"><HintPath>$(ManagedPath)\Unity.Mathematics.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="FMODUnity"><HintPath>$(ManagedPath)\FMODUnity.dll</HintPath><Private>false</Private></Reference>
+
+    <Reference Include="TicToc.Localization"><HintPath>$(ManagedPath)\TicToc.Localization.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="TicToc.ObjectPooling.Runtime"><HintPath>$(ManagedPath)\TicToc.ObjectPooling.Runtime.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Assembly-CSharp"><HintPath>$(ManagedPath)\Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Mod strings, one file per language; a Lang folder next to the DLL overrides them. -->
+    <EmbeddedResource Include="Lang\*.txt" WithCulture="false" LogicalName="RiftAccess.Lang.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <!-- Deploy on build so the test loop is: build, launch. -->
+  <Target Name="CopyToPlugins" AfterTargets="Build">
+    <ItemGroup>
+      <CueSounds Include="$(SoundsPath)\*.wav" />
+    </ItemGroup>
+    <MakeDir Directories="$(PluginDir);$(PluginDir)\Sounds" />
+    <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll" DestinationFolder="$(PluginDir)" />
+    <!-- The game locks prism.dll while it runs and the file never changes between builds. -->
+    <Copy SourceFiles="$(PrismPath)\prism.dll" DestinationFolder="$(PluginDir)" SkipUnchangedFiles="true" ContinueOnError="true" />
+    <Copy SourceFiles="@(CueSounds)" DestinationFolder="$(PluginDir)\Sounds" SkipUnchangedFiles="true" ContinueOnError="true" />
+  </Target>
+
+</Project>

@@ -1,0 +1,101 @@
+# Publishes a release when a version tag is pushed. Stage it first:
+#   set <Version> in RiftAccess/RiftAccess.csproj and Version in RiftAccess/Plugin.cs, add a "## X.Y.Z"
+#   section to CHANGELOG.md, then pwsh tools/package.ps1 (checks the translations, builds, restages
+#   dist/payload), then git commit -am "Release X.Y.Z" && git tag vX.Y.Z && git push --follow-tags
+# CI cannot build the mod: it references the game's own assemblies, which are not redistributable,
+# so the built plugin (with Prism, its licences and the cue sounds) is committed in dist/payload.
+# The zip adds the official BepInEx 5.4.23.5 x64 download, checked by SHA-256.
+# installer/RiftOfTheNecroDancerAccessibilityInstaller.exe is built from the shared installer project
+# (..\installer, build_installer.bat) and committed here; it always installs the latest release.
+# Run it by hand (Actions > Release > Run workflow) to build the zip without releasing.
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  BEPINEX_VERSION: v5.4.23.5
+  BEPINEX_ASSET: BepInEx_win_x64_5.4.23.5.zip
+  BEPINEX_SHA256: 82f9878551030f54657792c0740d9d51a09500eeae1fba21106b0c441e6732c4
+  TAG: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'v0.0.0' }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check the tag against the mod's version
+        if: github.event_name == 'push'
+        run: |
+          version=$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' RiftAccess/RiftAccess.csproj | head -1)
+          plugin=$(sed -n 's/.*Version = "\([^"]*\)".*/\1/p' RiftAccess/Plugin.cs | head -1)
+          if [ "v$version" != "$TAG" ] || [ "$plugin" != "$version" ]; then
+            echo "Tag $TAG does not match RiftAccess.csproj ($version) and Plugin.cs ($plugin)." >&2
+            exit 1
+          fi
+          grep -aq "$version" dist/payload/BepInEx/plugins/RiftAccess/RiftAccess.dll || {
+            echo "dist/payload/.../RiftAccess.dll is not version $version: run tools/package.ps1 and commit." >&2
+            exit 1
+          }
+
+      - name: Check that the payload and the installer are there
+        run: |
+          p=dist/payload/BepInEx/plugins/RiftAccess
+          for f in $p/RiftAccess.dll $p/prism.dll $p/NOTICE $p/LICENSES/prism/mpl-2.0.txt \
+                   $p/Sounds/tap_left.wav $p/Sounds/tap_mid.wav $p/Sounds/tap_right.wav \
+                   dist/payload/RiftAccess-README.md \
+                   installer/RiftOfTheNecroDancerAccessibilityInstaller.exe; do
+            test -f "$f" || { echo "$f is missing" >&2; exit 1; }
+          done
+          for s in sounds/cues/*.wav; do
+            test -f "$p/Sounds/$(basename "$s")" || { echo "$p/Sounds/$(basename "$s") is missing" >&2; exit 1; }
+          done
+
+      - name: Release notes from this version's CHANGELOG section
+        if: github.event_name == 'push'
+        run: |
+          version=${TAG#v}
+          awk -v h="## $version" '$0 == h {on=1; next} /^## / {on=0} on' CHANGELOG.md > notes.md
+          test -s notes.md || { echo "CHANGELOG.md has no '## $version' section." >&2; exit 1; }
+
+      - name: Download BepInEx
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p dl
+          gh release download "$BEPINEX_VERSION" --repo BepInEx/BepInEx --pattern "$BEPINEX_ASSET" --dir dl
+          echo "$BEPINEX_SHA256  dl/$BEPINEX_ASSET" | sha256sum -c -
+
+      - name: Assemble the game folder layout
+        run: |
+          mkdir -p stage
+          unzip -q "dl/$BEPINEX_ASSET" -d stage
+          rm -f stage/changelog.txt
+          cp -r dist/payload/. stage/
+          test -f stage/winhttp.dll
+          test -f stage/BepInEx/core/BepInEx.dll
+          (cd stage && zip -qr "../RiftAccess-$TAG.zip" .)
+          unzip -l "RiftAccess-$TAG.zip"
+
+      - name: Keep the zip (manual runs)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: RiftAccess-build
+          path: RiftAccess-${{ env.TAG }}.zip
+
+      - name: Create GitHub Release
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            RiftAccess-${{ github.ref_name }}.zip
+            installer/RiftOfTheNecroDancerAccessibilityInstaller.exe
+          body_path: notes.md

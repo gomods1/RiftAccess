@@ -1,0 +1,7 @@
+game/
+shots/
+release/
+RiftAccess/bin/
+RiftAccess/obj/
+*.log
+__pycache__/
