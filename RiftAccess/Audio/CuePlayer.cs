@@ -103,6 +103,43 @@ namespace RiftAccess.Audio
             }
         }
 
+        /// <summary>
+        /// Plays a cue on repeat (the hold tone) from delaySeconds until Stop, or until stopAfterSeconds from now
+        /// when that is above zero (the end is then sample-accurate on the DSP clock too).
+        /// </summary>
+        public static FMOD.Channel? PlayLoop(string name, float delaySeconds, float stopAfterSeconds, float pan, float volume, float pitch = 1f)
+        {
+            if (!_ready || !Sounds.TryGetValue(name, out var sound)) return null;
+            try
+            {
+                var core = RuntimeManager.CoreSystem;
+                if (core.playSound(sound, _group, true, out var ch) != FMOD.RESULT.OK) return null;
+                ch.setMode(FMOD.MODE.LOOP_NORMAL);
+                ch.setLoopCount(-1);
+                ch.setPan(Math.Max(-1f, Math.Min(1f, pan)));
+                ch.setVolume(volume);
+                if (Math.Abs(pitch - 1f) > 0.001f) ch.setPitch(pitch);
+                _group.getDSPClock(out _, out ulong clock);
+                ulong start = clock + (ulong)(Math.Max(0f, delaySeconds) * _sampleRate);
+                ulong end = stopAfterSeconds > 0f ? clock + (ulong)(stopAfterSeconds * _sampleRate) : 0;
+                ch.setDelay(start, end, true);
+                ch.setPaused(false);
+                return ch;
+            }
+            catch (Exception ex)
+            {
+                Plugin.LogDebug("Loop " + name + " failed: " + ex.Message);
+                return null;
+            }
+        }
+
+        /// <summary>Stops a channel from PlayLoop (harmless if it already ended).</summary>
+        public static void Stop(FMOD.Channel? ch)
+        {
+            if (ch == null) return;
+            try { ch.Value.stop(); } catch { }
+        }
+
         /// <summary>Stops a scheduled cue if it has not started yet. Returns true if it was cancelled.</summary>
         public static bool Cancel(Scheduled s)
         {

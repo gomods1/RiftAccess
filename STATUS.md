@@ -57,6 +57,27 @@ CheckInput events (assist events exist only in some beatmaps and are drawn only 
   during the hit move too. Cue check also counts misleading extra cues (wrong lane before the right one, cues for hits
   that never came).
 
+## Session 2 (2026-11-24): player feedback on 0.1.0
+Feedback: first minigame (yoga) instructions confusing; hold cues not explained and hard to tell from taps; health
+items played two notes that overlap the other lanes' pitches. Asked: regenerate every cue with genny-reloaded, each
+clearly distinct, especially holds; minigames accessible and well worded.
+
+Done (see CHANGELOG Unreleased, CUES.md):
+- New cue set from `sounds/cues/make_batch.py` (genny-reloaded): per-lane instruments, accordion hold head, looped
+  hold hum (`CuePlayer.PlayLoop`, DSP-scheduled end), heart = lane tap + sparkle above all lane pitches, rising/falling
+  tap/hold/dodge for up/down. Lane-coded families level-matched (ear loudness -12).
+- Hold tone setting; first-hold spoken hint; F1 sound guide (lines play their sound, own handles, never cancels song cues).
+- Minigame and hold tutorial lines rewritten in all 11 languages; check-lang passes.
+
+Verified in game (build 1.20.0-b24233, game updated since session 1): F1 sound guide reads and plays (recording shows
+the hum from 0.5 s to 2.0 s as scheduled, looping past the file length); wyrm tutorial with the cue bot: hold head,
+hum from press to release beat, release, combo kept, hint spoken; yoga tutorial completed by the bot twice with the new
+wording, Up/Down moves cued with tap_up / tap_down.
+Also: ProfileUnlockPopup ("new Rift profile item") only had its buttons read; UnlockPopupReader now reads title, items
+and call to action (built, not yet heard: the one unlock on this profile was already shown).
+Released as 0.2.0.
+Not yet: a human listening test of the new sounds; burger/photo/show/breathing minigames (still locked here).
+
 ## Next steps
 1. Listening test by the user: Fundamentos tutorial, then Disco Disaster Easy by ear. Tune cue volume, music volume,
    lead and timing offset in F10 if needed.

@@ -16,7 +16,7 @@ namespace RiftAccess
     {
         public const string Guid = "gomods.riftaccess";
         public const string Name = "Rift Access";
-        public const string Version = "0.1.0";
+        public const string Version = "0.2.0";
 
         internal static Plugin Instance { get; private set; }
         internal static string PluginDir { get; private set; }
@@ -38,6 +38,7 @@ namespace RiftAccess
             MenuReader.TryPatch(_harmony);
             TrackReader.TryPatch(_harmony);
             NarrationReader.TryPatch(_harmony);
+            UnlockPopupReader.TryPatch(_harmony);
             LaneCues.TryPatch(_harmony);
             StageWatcher.TryPatch(_harmony);
             DirectionCues.TryPatch(_harmony);
@@ -89,6 +90,7 @@ namespace RiftAccess
                 MenuReader.Update();
                 TrackReader.Update();
                 NarrationReader.Update();
+                UnlockPopupReader.Update();
                 ScreenTextWatcher.Update();
                 StageWatcher.Update();
                 LaneCues.Update();

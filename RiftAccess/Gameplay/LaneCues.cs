@@ -44,6 +44,15 @@ namespace RiftAccess.Gameplay
             public readonly List<PendingCue> Played = new List<PendingCue>();
             public readonly HashSet<int> Checked = new HashSet<int>();
             public int Frame;
+            /// <summary>The hold tone, playing while the player keeps a hold note's key down.</summary>
+            public FMOD.Channel? HoldTone;
+
+            public void StopHoldTone()
+            {
+                if (HoldTone == null) return;
+                CuePlayer.Stop(HoldTone);
+                HoldTone = null;
+            }
         }
 
         private static AccessTools.FieldRef<RREnemyController, List<RREnemy>> _activeEnemies;
@@ -95,6 +104,7 @@ namespace RiftAccess.Gameplay
         private static void Reset()
         {
             CuePlayer.CancelAllPending();
+            foreach (var st in States.Values) st.StopHoldTone();
             States.Clear();
             SeenTypes.Clear();
             _lastBeat = float.NegativeInfinity;
@@ -107,6 +117,7 @@ namespace RiftAccess.Gameplay
                 // Unstarted cues would sound over the pause menu; drop them and let them be scheduled again later.
                 foreach (var st in States.Values)
                 {
+                    st.StopHoldTone();
                     foreach (var p in st.Pending)
                         if (CuePlayer.Cancel(p.Handle)) st.Done.Remove(p.Key);
                     st.Pending.Clear();
@@ -147,11 +158,19 @@ namespace RiftAccess.Gameplay
                 if (!States.TryGetValue(id, out var st)) { st = new EnemyState { Id = id }; States[id] = st; }
                 st.Frame = _frame;
 
-                if (e.IsDying || !e.ShouldSpoofInputForEnemy() || !e.ShouldQueueSounds()) { Targets.Clear(); CancelStale(st, Targets, -1); continue; }
+                if (e.IsDying || !e.ShouldSpoofInputForEnemy() || !e.ShouldQueueSounds()) { st.StopHoldTone(); Targets.Clear(); CancelStale(st, Targets, -1); continue; }
                 if (CueCheck.Enabled) CheckHitWindow(controller, ftc, e, st);
 
-                if (ModConfig.AnnounceNewEnemies.Value && SeenTypes.Add(e.EnemyTypeId) && StageWatcher.SpeechAllowed)
-                    Speech.SayEvent(e.DisplayName);
+                if (SeenTypes.Add(e.EnemyTypeId) && StageWatcher.SpeechAllowed)
+                {
+                    if (ModConfig.AnnounceNewEnemies.Value) Speech.SayEvent(e.DisplayName);
+                    // The first hold note of the session gets a reminder of how holds sound.
+                    if (e.IsHoldNote && ModConfig.CuesEnabled.Value && !_holdHintGiven)
+                    {
+                        _holdHintGiven = true;
+                        Speech.SayEvent(Loc.T("hint.hold"));
+                    }
+                }
 
                 if (!ModConfig.CuesEnabled.Value) continue;
                 int lane = PredictLane(e, columns);
@@ -160,13 +179,24 @@ namespace RiftAccess.Gameplay
                 {
                     Targets.Clear();
                     CancelStale(st, Targets, lane);
-                    if (ModConfig.HoldReleaseCue.Value)
+                    float end = e.GetLastHoldBeatNumber();
+                    if (st.HoldTone == null && ModConfig.HoldTone.Value && IsFinite(end) && end > now)
                     {
-                        float end = e.GetLastHoldBeatNumber();
-                        if (end > now) Consider(controller, ftc, st, "rel", end, 0f, lane, columns, "release", 1f);
+                        // From the press until the release beat (or until the key comes up early).
+                        Place(lane, columns, out float pan, out _, out float pitch);
+                        float stop = SecondsUntil(controller, ftc, end) + ModConfig.TimingOffsetMs.Value / 1000f
+                                     - (LatencyManager.AudioLatencyOffset - LatencyManager.VideoLatencyOffset);
+                        if (stop > 0.05f)
+                        {
+                            st.HoldTone = CuePlayer.PlayLoop("hold_loop", 0f, stop, pan, ModConfig.CueVolume.Value / 100f * 0.7f, pitch * LoopPitch(lane, columns));
+                            Plugin.LogDebug($"hold tone lane={lane} for {stop:0.000}s ({st.Id})");
+                        }
                     }
+                    if (ModConfig.HoldReleaseCue.Value && end > now)
+                        Consider(controller, ftc, st, "rel", end, 0f, lane, columns, "release", 1f);
                     continue;
                 }
+                st.StopHoldTone();
 
                 // This hit and every further hit the enemy still needs: the game gives the spacing of the next one
                 // (ExpectedFollowUpActionTrueBeatNumber); the rest follow at the same spacing, one per remaining health.
@@ -195,6 +225,7 @@ namespace RiftAccess.Gameplay
             foreach (var kv in States) if (kv.Value.Frame != _frame) Gone.Add(kv.Key);
             foreach (var id in Gone)
             {
+                States[id].StopHoldTone();
                 if (CueCheck.Enabled) CheckPhantoms(States[id], float.PositiveInfinity);
                 States.Remove(id);
             }
@@ -233,12 +264,7 @@ namespace RiftAccess.Gameplay
                 delay = 0f;
             }
 
-            float rel = lane - (columns - 1) / 2f;
-            float half = Math.Max(0.5f, (columns - 1) / 2f);
-            float pan = rel / half * (ModConfig.PanWidth.Value / 100f);
-            string side = !ModConfig.LanePitch.Value ? "mid" : rel < -0.01f ? "left" : rel > 0.01f ? "right" : "mid";
-            float pitch = 1f;
-            if (ModConfig.LanePitch.Value && Math.Abs(rel) > 1.01f) pitch = (float)Math.Pow(2, Math.Sign(rel) * 2 / 12.0);
+            Place(lane, columns, out float pan, out string side, out float pitch);
             string sound = kind == "click" ? "click" : kind + "_" + side;
             float vol = ModConfig.CueVolume.Value / 100f * volumeScale;
 
@@ -254,6 +280,28 @@ namespace RiftAccess.Gameplay
             }
             Plugin.LogDebug($"cue {sound} {role} hit={targetBeat:0.00} lane={lane} in {delay:0.000}s ({st.Id})");
         }
+
+        /// <summary>Where a lane sounds: pan, which lane file (left, mid, right) and an extra pitch for boards wider
+        /// than three lanes (outer lanes two semitones beyond the side sounds).</summary>
+        private static void Place(int lane, int columns, out float pan, out string side, out float pitch)
+        {
+            float rel = lane - (columns - 1) / 2f;
+            float half = Math.Max(0.5f, (columns - 1) / 2f);
+            pan = rel / half * (ModConfig.PanWidth.Value / 100f);
+            side = !ModConfig.LanePitch.Value ? "mid" : rel < -0.01f ? "left" : rel > 0.01f ? "right" : "mid";
+            pitch = 1f;
+            if (ModConfig.LanePitch.Value && Math.Abs(rel) > 1.01f) pitch = (float)Math.Pow(2, Math.Sign(rel) * 2 / 12.0);
+        }
+
+        /// <summary>The hold tone is one file (the middle lane's note): a fifth down on the left, a fifth up on the right.</summary>
+        internal static float LoopPitch(int lane, int columns)
+        {
+            if (!ModConfig.LanePitch.Value) return 1f;
+            float rel = lane - (columns - 1) / 2f;
+            return rel < -0.01f ? (float)Math.Pow(2, -7 / 12.0) : rel > 0.01f ? (float)Math.Pow(2, 7 / 12.0) : 1f;
+        }
+
+        private static bool _holdHintGiven;
 
         private static readonly List<KeyValuePair<float, int>> Targets = new List<KeyValuePair<float, int>>();
 

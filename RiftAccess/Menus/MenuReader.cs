@@ -223,8 +223,23 @@ namespace RiftAccess.Menus
             _lostAt = 0f;
         }
 
+        /// <summary>What the focused option says, or null.</summary>
+        public static string FocusText()
+        {
+            if (_focused == null || !_focused.isActiveAndEnabled) return null;
+            var parts = Describe(_focused);
+            return parts.Count > 0 ? string.Join(", ", parts) : CleanName(_focused.gameObject.name);
+        }
+
         public static void RepeatFocus()
         {
+            if (UnlockPopupReader.IsOpen)
+            {
+                Speech.Say(UnlockPopupReader.Text, true);
+                string focus = FocusText();
+                if (!string.IsNullOrEmpty(focus)) Speech.Say(focus);
+                return;
+            }
             if (_focused != null && _focused.isActiveAndEnabled)
             {
                 var parts = Describe(_focused);

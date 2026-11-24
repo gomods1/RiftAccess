@@ -145,15 +145,31 @@ namespace RiftAccess.Gameplay
             {
                 if (dir != ActionDirection.All && (dir & d) == 0) continue;
                 float pan = d == ActionDirection.Left ? -width : d == ActionDirection.Right ? width : 0f;
-                string side = !ModConfig.LanePitch.Value ? "mid" : d == ActionDirection.Left ? "left" : d == ActionDirection.Right ? "right" : "mid";
-                float pitch = d == ActionDirection.Up ? 1.26f : d == ActionDirection.Down ? 0.79f : 1f;
+                // Up and down have their own sounds (the middle sound with a rising or falling glide); older sound
+                // sets without them get the middle sound pitched up or down.
+                string side = d == ActionDirection.Up ? "up" : d == ActionDirection.Down ? "down"
+                            : !ModConfig.LanePitch.Value ? "mid" : d == ActionDirection.Left ? "left" : d == ActionDirection.Right ? "right" : "mid";
+                float pitch = 1f;
+                if ((side == "up" || side == "down") && !CuePlayer.Has(kind + "_" + side))
+                {
+                    pitch = side == "up" ? 1.26f : 0.79f;
+                    side = "mid";
+                }
                 CuePlayer.Play(kind + "_" + side, delay, pan, vol, pitch);
                 var key = d == ActionDirection.Left ? UnityEngine.InputSystem.Key.LeftArrow : d == ActionDirection.Right ? UnityEngine.InputSystem.Key.RightArrow
                         : d == ActionDirection.Down ? UnityEngine.InputSystem.Key.DownArrow : UnityEngine.InputSystem.Key.UpArrow;
                 CueBot.OnDirection("dir" + (++_botIds), key, UnityEngine.Time.unscaledTime + secondsToPress, holdSeconds);
                 if (ModConfig.HitClick.Value) CuePlayer.Play("click", Math.Max(0f, secondsToPress + latency), pan, vol * 0.6f, pitch);
+                string rel = CuePlayer.Has("release_" + side) ? "release_" + side : "release_mid";
+                if (holdSeconds > 0f && ModConfig.HoldTone.Value)
+                {
+                    float loopPitch = d == ActionDirection.Up ? 1.26f : d == ActionDirection.Down ? 0.79f
+                                    : d == ActionDirection.Left ? LaneCues.LoopPitch(0, 3) : d == ActionDirection.Right ? LaneCues.LoopPitch(2, 3) : 1f;
+                    float from = Math.Max(0f, secondsToPress + latency);
+                    CuePlayer.PlayLoop("hold_loop", from, from + holdSeconds, pan, vol * 0.7f, loopPitch);
+                }
                 if (holdSeconds > 0f && ModConfig.HoldReleaseCue.Value)
-                    CuePlayer.Play("release_" + side, Math.Max(0f, secondsToPress + holdSeconds + latency), pan, vol, pitch);
+                    CuePlayer.Play(rel, Math.Max(0f, secondsToPress + holdSeconds + latency), pan, vol, pitch);
             }
             Plugin.LogDebug($"direction cue {kind} {dir} press in {secondsToPress:0.000}s, cue in {delay:0.000}s");
         }

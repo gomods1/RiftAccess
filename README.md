@@ -29,13 +29,14 @@ Monsters come down three lanes: left, middle and right. **Every monster you must
 | Space or Shift | Activate vibe power (after the vibe ready chime) |
 | Escape | Pause |
 
-Kinds of sounds:
-- **Tap**: a normal hit. Monsters that take several hits get one tap per hit, in the lane where each hit must land. That includes bats and skulls that jump lanes, and zombies that hop.
-- **Long tone**: a hold note (wyrm). Press on the beat, keep holding, and let go at the **release pop**.
-- **Sparkle**: food or a heart. Hit it to heal.
+Kinds of sounds (press F1 and go to the end of the help for a **sound guide** that plays each one):
+- **Tap**: a normal hit. Each lane has its own instrument as well as its own side: a low wooden **marimba** on the left, a **kalimba** in the middle, a high **steel drum** on the right. Monsters that take several hits get one tap per hit, in the lane where each hit must land. That includes bats and skulls that jump lanes, and zombies that hop.
+- **Accordion note**: a hold note (wyrm). Press on the beat and keep holding: a soft **hum** plays in the lane while you hold. Let go at the **pop**.
+- **Lane sound with a sparkle on top**: food or a heart. Hit it to heal.
 - **Rising chime**: vibe power is ready. Press Space.
-- **Two-note warning**: your health is low.
-- **Whoosh** (boss battles): an attack to dodge. Press its direction. A normal tap is a chance to counterattack. Up is a higher pitch, down a lower one.
+- **Heartbeat and two falling notes**: your health is low.
+- **Whoosh** (boss battles): an attack to dodge. Press its direction. A tap without a whoosh is a chance to counterattack.
+- **Kalimba gliding up or down** (boss battles and minigames): press up or down.
 
 The game's tutorials are adapted. Coach Zad's lines that describe the screen ("when a monster reaches the Action Row...") are replaced by explanations of how to play by ear. You can turn this off in the settings.
 
@@ -59,7 +60,7 @@ Menus are the game's own: arrows move, Enter selects, Escape goes back. The mod 
 
 Up and down move through the settings, left and right change a value, and Enter toggles a checkbox or runs a button. Tab jumps to the next section. Control plus up or down reads what the setting does, and Escape closes the menu. Changes are saved immediately.
 
-- **Lane cues**: on or off; **cue lead** (half a beat up to 4 beats before the hit); **count-in cues** (extra cues one beat apart before the main one); **click on the hit beat**; **cue volume**; **stereo width**; **different pitch per lane** (keep it on with one ear or mono sound); **cue timing offset** in milliseconds; **cue every hit of tough monsters**; **hold note release cue**; **sparkle sound for food and hearts**; **music volume during songs** (lowers the music while you play).
+- **Lane cues**: on or off; **cue lead** (half a beat up to 4 beats before the hit); **count-in cues** (extra cues one beat apart before the main one); **click on the hit beat**; **cue volume**; **stereo width**; **different pitch per lane** (keep it on with one ear or mono sound); **cue timing offset** in milliseconds; **cue every hit of tough monsters**; **hold tone** (the hum while you hold); **hold note release cue**; **sparkle sound for food and hearts**; **music volume during songs** (lowers the music while you play).
 - **Announcements**: speech during songs; health changes; low health sound and threshold; vibe ready sound and speech; combo announcements every 10, 25, 50 or 100 hits; combo lost; new monster types; read results; blind-friendly tutorial; instant dialogue (each Enter moves to the next line).
 - **Speech**: navigation interrupts speech; say position in menus; braille; debug logging.
 - **Tools**: test lane cues; reset all settings (press Enter twice).
@@ -71,9 +72,9 @@ Up and down move through the settings, left and right change a value, and Enter 
 - a **tap** is a chance to counterattack;
 - when the boss is stunned, centre taps mark the moments to attack (up, left or right all work).
 
-Up sounds higher and down lower. On Hard boss battles the game shows no indicators, so there are no sounds either, exactly as for sighted players.
+Up glides upward and down glides downward. On Hard boss battles the game shows no indicators, so there are no sounds either, exactly as for sighted players.
 
-**Minigames** (yoga, burgers, photos, shows and the rest): every move gets a sound in its direction at your cue lead. Hold moves get a release pop. This works whether or not the game's own Assist mode is on.
+**Minigames** (yoga, burgers, photos, shows and the rest): every move gets a sound in its direction at your cue lead: left and right on their side, up and down as a rising or falling glide. Hold moves get the accordion note, the hum for as long as you must hold, and the pop. This works whether or not the game's own Assist mode is on.
 
 ## Known limitations
 

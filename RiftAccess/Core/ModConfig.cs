@@ -22,6 +22,7 @@ namespace RiftAccess.Core
         public static ConfigEntry<int> TimingOffsetMs;
         public static ConfigEntry<bool> FollowUpCues;
         public static ConfigEntry<bool> HoldReleaseCue;
+        public static ConfigEntry<bool> HoldTone;
         public static ConfigEntry<bool> HealthItemCue;
         public static ConfigEntry<int> MusicVolume;
 
@@ -62,6 +63,7 @@ namespace RiftAccess.Core
             TimingOffsetMs = cfg.Bind(cues, "TimingOffsetMs", 0, "Moves every cue earlier (negative) or later (positive), in milliseconds.");
             FollowUpCues = cfg.Bind(cues, "FollowUpCues", true, "Cue every hit of enemies that take several hits.");
             HoldReleaseCue = cfg.Bind(cues, "HoldReleaseCue", true, "For hold notes, play a release sound when you may let go.");
+            HoldTone = cfg.Bind(cues, "HoldTone", true, "For hold notes, play a humming tone while you keep the key down.");
             HealthItemCue = cfg.Bind(cues, "HealthItemCue", true, "Use a sparkle sound for hearts (hit them to heal).");
             MusicVolume = cfg.Bind(cues, "MusicDuck", 75, "Volume of the game's music while a song plays, in percent, to hear cues better.");
 
@@ -97,6 +99,7 @@ namespace RiftAccess.Core
             All.Add(new BoolSetting(c, "set.pitch", LanePitch));
             All.Add(new IntSetting(c, "set.offset", TimingOffsetMs, -300, 300, 10, v => v == 0 ? Loc.T("fmt.none") : Loc.F("fmt.ms", v)));
             All.Add(new BoolSetting(c, "set.followup", FollowUpCues));
+            All.Add(new BoolSetting(c, "set.holdtone", HoldTone));
             All.Add(new BoolSetting(c, "set.release", HoldReleaseCue));
             All.Add(new BoolSetting(c, "set.heart", HealthItemCue));
             All.Add(new IntSetting(c, "set.music", MusicVolume, 0, 100, 10, v => Loc.F("fmt.percent", v)));

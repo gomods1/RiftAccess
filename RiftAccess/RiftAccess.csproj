@@ -5,7 +5,7 @@
     <LangVersion>10.0</LangVersion>
     <AssemblyName>RiftAccess</AssemblyName>
     <RootNamespace>RiftAccess</RootNamespace>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <DebugType>none</DebugType>
     <NoWarn>$(NoWarn);CS0649;CS0169;CS0618</NoWarn>
