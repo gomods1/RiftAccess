@@ -9,7 +9,7 @@ Families (each one its own timbre, so the kind of cue is clear even in mono):
   release_*  a bubble pop with a quick upward flick: let go now.
   dodge_*    a noise whoosh with a low buzz: boss attack, dodge.
   *_up / *_down  boss and minigame directions without a lane: the middle sound with a rising or falling glide.
-  click, vibe_ready, warning, vibe_on.
+  click, vibe_ready, warning, vibe_on, locked / unlocked (the game's input lockout).
 Run: python sounds/cues/make_batch.py && genny-reloaded render sounds/cues/batch.json --quiet
 """
 import json, os
@@ -103,6 +103,17 @@ sounds += [
                 {"type": "seq", "inst": "square_lead", "steps": "D4:0.12 -:0.04 A3:0.2", "vel": 0.6, "gain": 0.9,
                  "fx": [{"type": "lowpass", "cutoff": 1800}]}],
      "max_loudness": -10, "fx": [MONO]},
+    # The game locked the lane keys (too many presses with nothing to hit): a heavy latch and a low buzz.
+    {"out": "locked.wav", "duration": 0.45,
+     "layers": [{"type": "sfx", "kind": "click", "params": {"tone": 900}, "gain": 0.9},
+                {"type": "sfx", "kind": "error", "at": 0.03, "params": {"freq": 150, "dur": 0.3}, "gain": 0.6,
+                 "fx": [{"type": "lowpass", "cutoff": 1400}]}],
+     "max_loudness": -11, "fx": [FADE(0.12), MONO]},
+    # The keys work again: a light key click and a soft rising two-note.
+    {"out": "unlocked.wav", "duration": 0.4,
+     "layers": [{"type": "sfx", "kind": "click", "params": {"tone": 2600}, "gain": 0.6},
+                {"type": "sfx", "kind": "success", "at": 0.04, "params": {"freq": "A5", "up": 5, "wave": "sine"}, "gain": 0.5}],
+     "max_loudness": -13, "fx": [FADE(0.12), MONO]},
     {"out": "vibe_on.wav",
      "layers": [{"type": "sfx", "kind": "powerup", "gain": 0.6},
                 {"type": "synth", "inst": "warm_pad", "notes": "C4:maj", "dur": 0.4, "gain": 0.4}],

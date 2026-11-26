@@ -42,7 +42,7 @@ namespace RiftAccess.Menus
 
         private static bool PollPrefix(InputAction __instance, ref bool __result)
         {
-            if (!IsBlocking) return true;
+            if (!IsBlocking && !ReviewBuffers.AltGate) return true;
             try
             {
                 if (_asset == null) _asset = InputAccessor.Instance?.RiftInput?.asset;

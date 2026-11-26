@@ -37,6 +37,10 @@ namespace RiftAccess.Core
         public static ConfigEntry<bool> AnnounceComboLost;
         public static ConfigEntry<bool> AnnounceNewEnemies;
         public static ConfigEntry<bool> AnnounceResults;
+        public static ConfigEntry<bool> LockoutCue;
+        public static ConfigEntry<bool> AnnounceVibeChains;
+        public static ConfigEntry<bool> AnnounceTraps;
+        public static ConfigEntry<bool> DescribeScenes;
 
         public static ConfigEntry<bool> TutorialGuide;
         public static ConfigEntry<bool> InstantDialogue;
@@ -47,6 +51,7 @@ namespace RiftAccess.Core
         public static ConfigEntry<bool> Braille;
         public static ConfigEntry<string> SpeechBackend;
         public static ConfigEntry<bool> DebugLogging;
+        public static ConfigEntry<bool> DevFastBoot;
 
         public static readonly List<Setting> All = new List<Setting>();
 
@@ -78,6 +83,10 @@ namespace RiftAccess.Core
             AnnounceComboLost = cfg.Bind(ann, "AnnounceComboLost", false, "Say when you lose a combo.");
             AnnounceNewEnemies = cfg.Bind(ann, "AnnounceNewEnemies", false, "Say the name of each enemy type the first time it appears in a song.");
             AnnounceResults = cfg.Bind(ann, "AnnounceResults", true, "Read the results when a song ends.");
+            AnnounceVibeChains = cfg.Bind(ann, "AnnounceVibeChains", true, "Say when a vibe chain starts (and how many monsters it has), breaks or is completed.");
+            AnnounceTraps = cfg.Bind(ann, "AnnounceTraps", true, "Say each trap that appears on the board: its kind, lane and row, and what it does.");
+            DescribeScenes = cfg.Bind(ann, "DescribeScenes", true, "In story dialogue, say who speaks and their expression, who appears or leaves, the place and what happens on screen.");
+            LockoutCue = cfg.Bind(ann, "LockoutCue", true, "Play a sound and speak when the game locks your keys after stray presses, and when a Down press misses because a lane was empty.");
             TutorialGuide = cfg.Bind(ann, "TutorialGuide", true, "In tutorials, replace hints about what is on screen with how to play by ear.");
             InstantDialogue = cfg.Bind(ann, "InstantDialogue", true, "Show dialogue lines at once, so each Enter moves to the next line.");
 
@@ -87,6 +96,7 @@ namespace RiftAccess.Core
             Braille = cfg.Bind(sp, "Braille", true, "Send speech to a braille display too.");
             SpeechBackend = cfg.Bind(sp, "Backend", "Auto", "Prism speech backend: Auto, or a backend name such as NVDA or SAPI.");
             DebugLogging = cfg.Bind(sp, "DebugLogging", false, "Write detailed diagnostics to the BepInEx log.");
+            DevFastBoot = cfg.Bind(sp, "DevFastBoot", false, "Developers: skip the intro and title screen at startup (not shown in the F10 menu).");
 
             All.Clear();
             const string c = "section.cues", a = "section.announce", p = "section.speech";
@@ -113,6 +123,10 @@ namespace RiftAccess.Core
             All.Add(new IntChoiceSetting(a, "set.combo", ComboMilestone, new[] { 0, 10, 25, 50, 100 }, v => v == 0 ? Loc.T("off") : Loc.F("fmt.every", v)));
             All.Add(new BoolSetting(a, "set.combolost", AnnounceComboLost));
             All.Add(new BoolSetting(a, "set.enemies", AnnounceNewEnemies));
+            All.Add(new BoolSetting(a, "set.lockout", LockoutCue));
+            All.Add(new BoolSetting(a, "set.chains", AnnounceVibeChains));
+            All.Add(new BoolSetting(a, "set.traps", AnnounceTraps));
+            All.Add(new BoolSetting(a, "set.scenes", DescribeScenes));
             All.Add(new BoolSetting(a, "set.results", AnnounceResults));
             All.Add(new BoolSetting(a, "set.tutorial", TutorialGuide));
             All.Add(new BoolSetting(a, "set.instant", InstantDialogue));

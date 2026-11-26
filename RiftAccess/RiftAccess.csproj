@@ -5,7 +5,7 @@
     <LangVersion>10.0</LangVersion>
     <AssemblyName>RiftAccess</AssemblyName>
     <RootNamespace>RiftAccess</RootNamespace>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <DebugType>none</DebugType>
     <NoWarn>$(NoWarn);CS0649;CS0169;CS0618</NoWarn>
@@ -26,6 +26,7 @@
     <Reference Include="UnityEngine.CoreModule"><HintPath>$(ManagedPath)\UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine.UI"><HintPath>$(ManagedPath)\UnityEngine.UI.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine.UIModule"><HintPath>$(ManagedPath)\UnityEngine.UIModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.VideoModule"><HintPath>$(ManagedPath)\UnityEngine.VideoModule.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine.TextRenderingModule"><HintPath>$(ManagedPath)\UnityEngine.TextRenderingModule.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine.InputLegacyModule"><HintPath>$(ManagedPath)\UnityEngine.InputLegacyModule.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine.ImageConversionModule"><HintPath>$(ManagedPath)\UnityEngine.ImageConversionModule.dll</HintPath><Private>false</Private></Reference>

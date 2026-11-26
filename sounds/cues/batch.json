@@ -1042,6 +1042,81 @@
    ]
   },
   {
+   "out": "locked.wav",
+   "duration": 0.45,
+   "layers": [
+    {
+     "type": "sfx",
+     "kind": "click",
+     "params": {
+      "tone": 900
+     },
+     "gain": 0.9
+    },
+    {
+     "type": "sfx",
+     "kind": "error",
+     "at": 0.03,
+     "params": {
+      "freq": 150,
+      "dur": 0.3
+     },
+     "gain": 0.6,
+     "fx": [
+      {
+       "type": "lowpass",
+       "cutoff": 1400
+      }
+     ]
+    }
+   ],
+   "max_loudness": -11,
+   "fx": [
+    {
+     "type": "fade",
+     "out": 0.12
+    },
+    {
+     "type": "mono"
+    }
+   ]
+  },
+  {
+   "out": "unlocked.wav",
+   "duration": 0.4,
+   "layers": [
+    {
+     "type": "sfx",
+     "kind": "click",
+     "params": {
+      "tone": 2600
+     },
+     "gain": 0.6
+    },
+    {
+     "type": "sfx",
+     "kind": "success",
+     "at": 0.04,
+     "params": {
+      "freq": "A5",
+      "up": 5,
+      "wave": "sine"
+     },
+     "gain": 0.5
+    }
+   ],
+   "max_loudness": -13,
+   "fx": [
+    {
+     "type": "fade",
+     "out": 0.12
+    },
+    {
+     "type": "mono"
+    }
+   ]
+  },
+  {
    "out": "vibe_on.wav",
    "layers": [
     {

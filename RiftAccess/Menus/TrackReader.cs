@@ -20,6 +20,7 @@ namespace RiftAccess.Menus
     internal static class TrackReader
     {
         private static AccessTools.FieldRef<BaseTrackSelectionOptionGroup, List<ITrackMetadata>> _meta;
+        private static AccessTools.FieldRef<BaseTrackSelectionOptionGroup, Shared.Difficulty> _difficulty;
         private static AccessTools.FieldRef<BaseTrackSelectionOptionGroup, int> _index;
         private static BaseTrackSelectionOptionGroup _pending;
         private static int _pendingFrame;
@@ -30,6 +31,7 @@ namespace RiftAccess.Menus
             {
                 _meta = AccessTools.FieldRefAccess<BaseTrackSelectionOptionGroup, List<ITrackMetadata>>("_trackMetaData");
                 _index = AccessTools.FieldRefAccess<BaseTrackSelectionOptionGroup, int>("_selectedTrackIndex");
+                _difficulty = AccessTools.FieldRefAccess<BaseTrackSelectionOptionGroup, Shared.Difficulty>("_selectedDifficulty");
                 harmony.Patch(AccessTools.Method(typeof(BaseTrackSelectionOptionGroup), "OnSelectedTrackChanged"),
                     postfix: new HarmonyMethod(typeof(TrackReader), nameof(ChangedPostfix)));
                 Plugin.LogInfo("Patched BaseTrackSelectionOptionGroup.OnSelectedTrackChanged (track lists)");
@@ -81,6 +83,16 @@ namespace RiftAccess.Menus
                 }
                 if (meta != null && !(meta is FolderTrackMetadata) && meta.BeatsPerMinute.HasValue && meta.BeatsPerMinute.Value > 0)
                     parts.Add(Loc.F("bpm", meta.BeatsPerMinute.Value.ToString("0", CultureInfo.InvariantCulture)));
+                // The best grade on this difficulty: drawn as a letter badge on the row, never as text.
+                if (meta != null && !(meta is FolderTrackMetadata) && !string.IsNullOrEmpty(meta.LevelId) && _difficulty != null)
+                {
+                    try
+                    {
+                        string g = Shared.PlayerData.PlayerDataUtil.GetLetterGradeForDifficulty(meta.LevelId, _difficulty(group));
+                        if (!string.IsNullOrEmpty(g) && g != "-" && g != "DNF") parts.Add(Loc.F("results.grade", g));
+                    }
+                    catch { }
+                }
                 if (ModConfig.ReadPosition.Value && list != null) parts.Add(Loc.F("position", i + 1, list.Count));
                 if (parts.Count == 0) return;
                 MenuReader.SetFocus(option);

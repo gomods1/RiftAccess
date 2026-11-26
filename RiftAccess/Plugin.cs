@@ -16,7 +16,7 @@ namespace RiftAccess
     {
         public const string Guid = "gomods.riftaccess";
         public const string Name = "Rift Access";
-        public const string Version = "0.2.0";
+        public const string Version = "0.3.0";
 
         internal static Plugin Instance { get; private set; }
         internal static string PluginDir { get; private set; }
@@ -34,13 +34,21 @@ namespace RiftAccess
             Speech.Initialize(PluginDir);
 
             _harmony = new Harmony(Guid);
+            DevBoot.TryPatch(_harmony);
             InputBlocker.TryPatch(_harmony);
             MenuReader.TryPatch(_harmony);
+            CarouselReader.TryPatch(_harmony);
             TrackReader.TryPatch(_harmony);
+            StoryBeatReader.TryPatch(_harmony);
             NarrationReader.TryPatch(_harmony);
+            SceneDescriber.TryPatch(_harmony);
+            CinematicDescriber.TryPatch(_harmony);
             UnlockPopupReader.TryPatch(_harmony);
             LaneCues.TryPatch(_harmony);
             StageWatcher.TryPatch(_harmony);
+            RuleWatcher.TryPatch(_harmony);
+            BattleWatcher.TryPatch(_harmony);
+            BossScenes.TryPatch(_harmony);
             DirectionCues.TryPatch(_harmony);
 
             // BepInEx's own manager object can be destroyed by scene loads in some games; keep ours separate.
@@ -74,6 +82,7 @@ namespace RiftAccess
             {
                 if (!_cuesReady) _cuesReady = CuePlayer.TryInitialize();
                 KeyInput.Update();
+                DevBoot.Update();
                 Loc.Update();
                 // Say "loaded" once the game's language is known, so it is in the player's language.
                 if (!_announcedLoaded && (Time.unscaledTime > 20f || (LocReady != null && (bool)LocReady.GetValue(null))))
@@ -87,12 +96,16 @@ namespace RiftAccess
                 if (ModSettingsMenu.IsOpen) ModSettingsMenu.Update();
                 else if (HelpMenu.IsOpen) HelpMenu.Update();
                 else Hotkeys.Update();
+                ReviewBuffers.Update();
                 MenuReader.Update();
                 TrackReader.Update();
                 NarrationReader.Update();
+                CinematicDescriber.Update();
                 UnlockPopupReader.Update();
                 ScreenTextWatcher.Update();
                 StageWatcher.Update();
+                BattleWatcher.Update();
+                BossScenes.Update();
                 LaneCues.Update();
                 CueBot.Update();
                 DirectionCues.Update();

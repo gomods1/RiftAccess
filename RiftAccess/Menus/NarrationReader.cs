@@ -84,6 +84,8 @@ namespace RiftAccess.Menus
                     try { _skip.Invoke(player, null); } catch { }
                 }
                 if (line.Length == 0) return;
+                string who = guide == null ? SceneDescriber.TakeSongPrefix() : null;
+                if (who != null) line = who + ": " + line;
                 if (!_hintGiven)
                 {
                     _hintGiven = true;

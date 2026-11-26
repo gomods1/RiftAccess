@@ -273,6 +273,8 @@ namespace RiftAccess.Menus
 
         public static List<string> Describe(Component root)
         {
+            var promo = CarouselReader.Describe(root);
+            if (promo != null) return promo;
             if (root is RangeSliderControlOption handle)
             {
                 var range = DescribeRangeHandle(handle);

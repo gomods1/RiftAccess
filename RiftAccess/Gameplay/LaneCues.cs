@@ -163,7 +163,7 @@ namespace RiftAccess.Gameplay
 
                 if (SeenTypes.Add(e.EnemyTypeId) && StageWatcher.SpeechAllowed)
                 {
-                    if (ModConfig.AnnounceNewEnemies.Value) Speech.SayEvent(e.DisplayName);
+                    if (ModConfig.AnnounceNewEnemies.Value) Speech.SayEvent(RuleWatcher.EnemyName(e.DisplayName));
                     // The first hold note of the session gets a reminder of how holds sound.
                     if (e.IsHoldNote && ModConfig.CuesEnabled.Value && !_holdHintGiven)
                     {
@@ -200,10 +200,12 @@ namespace RiftAccess.Gameplay
 
                 // This hit and every further hit the enemy still needs: the game gives the spacing of the next one
                 // (ExpectedFollowUpActionTrueBeatNumber); the rest follow at the same spacing, one per remaining health.
+                // Under a "Bane" modifier the game itself hits a damaged monster's follow-ups: cue only the first hit.
+                bool autoFollow = RuleWatcher.AutoHitsFollowUps(e);
                 float p = e.NextActionRowTrueBeatNumber;
                 Targets.Clear();
-                if (IsFinite(p)) Targets.Add(new KeyValuePair<float, int>(p, lane));
-                if (IsFinite(p) && ModConfig.FollowUpCues.Value && e.IsExpectingFollowUpAction && !e.IsHoldNote)
+                if (IsFinite(p) && !(autoFollow && e.CurrentHealthValue < e.MaxHealthValue)) Targets.Add(new KeyValuePair<float, int>(p, lane));
+                if (IsFinite(p) && !autoFollow && ModConfig.FollowUpCues.Value && e.IsExpectingFollowUpAction && !e.IsHoldNote)
                 {
                     float spacing = e.ExpectedFollowUpActionTrueBeatNumber - p;
                     if (IsFinite(spacing) && spacing > 0.05f)

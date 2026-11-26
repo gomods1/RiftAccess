@@ -80,6 +80,7 @@ namespace RiftAccess.Menus
                 if (promptsOnly && !IsTutorialPrompt(t.transform)) continue;
                 s = MenuReader.Label(t.transform, s);
                 if (StageWatcher.Paused && !MenuReader.HasLetters(s)) continue; // the stage's HUD counters behind the pause menu
+                if (!MenuReader.HasLetters(s) && s.IndexOf(':') > 0) continue; // ticking clocks (daily challenge countdown)
                 // Top of the screen first.
                 float y = -ScreenRect(t.rectTransform, t.canvas).yMax;
                 Batch.Add(new KeyValuePair<float, string>(y, s));

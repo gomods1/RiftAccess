@@ -7,7 +7,7 @@ Read STATUS.md first. Methodology: C:\Users\Nitropc\code\mods\starting_points\te
 - Unity 2021.3.43f1, **Mono**, x64. Audio is **FMOD** (FMODUnity); Unity audio is not part of the mix. Input: new Input System via one `RiftInputActions` (`InputAccessor.Instance.RiftInput`).
 - Loader: BepInEx 5.4.23.5 x64 (vendor/BepInEx_win_x64_5.4.23.5.zip). `steam_appid.txt` (2073250) in the game folder lets the exe start directly.
 - Languages (from the game's string table): English, Spanish_Spain, Spanish_LATAM, French, German, Italian, Portuguese_Brazil, Russian, Japanese, Korean, Chinese_Simplified, Chinese_Traditional. The mod ships all of them (RiftAccess/Lang).
-- Decompiled code: `game/Assembly-CSharp` (gitignored, never ship). String table dump: `game/loc/loc_dump.tsv` (Ctrl+F12 in game writes it).
+- Decompiled code: `game/Assembly-CSharp` (gitignored, never ship), from game build 1.20.0-b24233 (re-extracted 2026-11-26 with `ilspycmd -p`, dotted namespace folders nested). The b24174 copy is kept in `game/Assembly-CSharp.b24174`; the update only changed custom-track loading. Pins Confusion, HoldAndRelease, OppositeDay, VibeCheck exist only as strings (no code yet): re-check after game updates. String table dump: `game/loc/loc_dump.tsv` (Ctrl+F12 in game writes it).
 
 ## Game map
 - Menus: `Shared.MenuOptions.SelectableOption` (+ groups `OptionGroup<T>`, `GetSelectedOption()`); focus event = `SetSelected(true)`. Popups `Shared.Title.MenuPopupScreen`.
@@ -19,18 +19,23 @@ Read STATUS.md first. Methodology: C:\Users\Nitropc\code\mods\starting_points\te
 - Boss battles: `BBHitIndicator.PlayHitIndicatorFx(action, direction, lengthInSeconds, grid)`; minigames: `MGAssistIndicator.PlayHitIndicatorFx(direction, lengthInSeconds, beatLength, afterWindow, holdLength)`.
 - Game over: `GameOverScreen.SetFinalProgressPercentage`. Results: `StageFlowUiController.ShowResults(StageInputRecord, ...)`.
 - Focus loss pauses stages and mutes audio (`GameWindow.IsHandlingFocus`, internal flag, no player setting).
-- Default keys: lanes Left/Up/Right (A/W/D), Down/S = all three lanes, Space/Shift = vibe, Escape = pause; menus arrows/Enter/Escape, Ctrl = tab, Tab = sort. Mod keys: F1, F2, F10, H, Ctrl+F12 (debug dump). None collide.
+- Default keys: lanes Left/Up/Right (A/W/D), Down/S = all three lanes, Space/Shift = vibe, Escape = pause; menus arrows/Enter/Escape, Tab = sort. **Ctrl alone = CycleTab: changes difficulty in track lists and the story map, switches profile tabs, flips leaderboards: never use Ctrl combos in menus.** Mod keys: F1, F2, F10, H, Alt+arrows (review buffers; game input is blocked while Alt is held outside songs), Ctrl+F11 bot and Ctrl+F12 dump (debug only). Alt is unbound in the game.
 
 ## Architecture (RiftAccess/)
 - `Plugin.cs`: startup order, `AccessController` per-frame loop (KeyInput, Loc, Speech, InputBlocker, menus, readers, watchers, cues).
 - `Core/`: `Speech` (only speech entry point, logs every line to RiftAccess_speech.log), `Output/Prism*` (Prism 0.18.3 P/Invoke; PrismConfig has `availability_baseline_callback`), `ModConfig` (BepInEx config + `Setting` objects that the menu renders), `Loc` (Lang/*.txt embedded, `tut.<game key>` overrides tutorial lines), `KeyInput` (key edges from isPressed; `wasPressedThisFrame` misses presses here).
 - `Audio/CuePlayer`: FMOD core sounds from plugin `Sounds/*.wav`, own channel group under master, scheduled on the DSP clock (`setDelay`), cancellable until started.
 - `Gameplay/LaneCues`: the lane cue scheduler (postfix of `RREnemyController.UpdateSystem`), lane prediction (zombies, bats, sideways skulls), cancel-and-reschedule on lane/beat change. `StageWatcher`: health, vibe, combo, status (H), results, game over, music lowering. `DirectionCues`: boss/minigame indicators. `CueDemo`.
-- `Menus/`: `MenuReader` (focus, values, labels, range sliders, focus recovery), `TrackReader`, `NarrationReader` (tutorial replacement, instant dialogue), `ScreenTextWatcher` (stable visible text outside options; in a stage only pause menu, results and tutorial prompts), `ModSettingsMenu` (F10), `HelpMenu` + `Hotkeys`, `InputBlocker` (gates InputAction polling + disables maps while a mod menu is open).
+- `Menus/`: `MenuReader` (focus, values, labels, range sliders, focus recovery), `TrackReader`, `NarrationReader` (tutorial replacement, instant dialogue), `ScreenTextWatcher` (stable visible text outside options; in a stage only pause menu, results and tutorial prompts), `ModSettingsMenu` (F10), `HelpMenu` + `Hotkeys`, `InputBlocker` (gates InputAction polling + disables maps while a mod menu is open). Review buffers: `ReviewBuffers` (Alt+arrows), `PictureDescriber` (focused picture, then visible screen art), `Portraits` (sprite -> character + mood), `TutorialVideos` (demo clips), `StageArt` (song portraits, boss minions), `SceneDescriber`/`CinematicDescriber`/`BossScenes` (story, cinematics, boss scenes).
 - Sounds: `sounds/cues/batch.json` (genny), copied to the plugin on build.
 
+## Asset notes (game/assets, gitignored)
+- `game/assets/index.tsv` (addressable bundles) and `index_data.tsv` (data.unity3d): every object with type and name, from UnityPy (scripts in the session scratchpad: index_assets.py, export_sprites.py, export_video.py, yarn_dump.py). `game/assets/yarn/`: story scripts (lines carry "NAME: (pose, *anim*) text"), `img/` exported art, `video/` cinematics.
+- Pictures are described in Lang by sprite name (`art.<sprite lower>`); profile portraits map to a character look plus expression in `Menus/Portraits.cs`. Add new art the same way: export, view, describe, add to all 11 languages.
+
 ## Build / test loop
-- `dotnet build RiftAccess -c Release` deploys to the game. `pwsh tools/restart.ps1` (kill, build, launch). `tools/boot.sh [-n]` to the main menu. `tools/keys.sh KEYS [delayMs] ["-HoldMs N"]` sends scancodes (takes focus). `tools/shot.sh NAME`, `tools/speech.sh N`, `tools/log.sh N REGEX`, `python tools/check-lang.py`.
+- Dev fast boot: `DevFastBoot = true` in the mod cfg (hidden setting, edit with the game closed) skips the logos, intro cinematic and title; `tools/boot.sh` then waits for the main menu (about 13 s). Turn it off to hear the intro cinematic.
+- `dotnet build RiftAccess -c Release` deploys to the game. `pwsh tools/restart.ps1` (kill, build, launch). `tools/boot.sh [-n]` to the main menu. `tools/keys.sh KEYS [delayMs] ["-HoldMs N"]` sends scancodes (takes focus). `tools/shot.sh NAME`, `tools/speech.sh N`, `tools/log.sh N REGEX`, `python tools/check-lang.py`, `python tools/check-art.py` (every video, song portrait, minion and portrait alias has a string).
 - The user shares the machine: keys can be lost when focus moves; send one key per call when it matters. Do not build background-input dev harnesses (user asked to keep it simple).
 
 ## Verification without ears (regression tests)

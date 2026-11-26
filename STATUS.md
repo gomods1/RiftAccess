@@ -78,6 +78,33 @@ and call to action (built, not yet heard: the one unlock on this profile was alr
 Released as 0.2.0.
 Not yet: a human listening test of the new sounds; burger/photo/show/breathing minigames (still locked here).
 
+## Session 3 (2026-11-26): visual rules and scene descriptions
+Player report: damage "for hitting certain lanes" with no different cue. Cause: game rules shown only on screen (key
+lockout after stray presses, Down voided by an empty lane). User then asked to announce every visual-only rule and to
+describe all artwork. Done (see CHANGELOG Unreleased): lockout cue, damage source, full-row miss, vibe chains,
+modifiers, Bane auto-hits, grades, traps, boss/minigame HUD, countdown ticks, timing average, story scene staging,
+cinematic audio description, boss scenes, review buffers (Alt+arrows) with picture descriptions, promo carousel.
+Decompiled code re-extracted from b24233 (update changed only custom-track loading).
+
+Verified in game: lockout (cue + speech + unlock), damage source, full-row miss, vibe chains, letter grade, traps
+(bounce tutorial), boss H status and health quarters, Harmonie/Banshee defeat scenes, in-song dialogue speaker/mood/tone,
+intro cinematic description timing, Alt+Up on a track (cover), on the carousel and on profile frames (read from the
+preview card's part that changed last), carousel line, tutorial demo video line (Off-beat tutorial box, the box stays
+open), paused-song portraits with their reaction (Cadence and the coach), main menu artwork (Cadence with guitar, logo,
+city; hidden screens filtered by canvas, CanvasGroup alpha and on-screen area).
+Not verified in game: modifiers (needs a pin equipped), Bane cueing, story dialogue scenes (no unlocked dialogue beat on
+this save, and unlocking would change the save), outro cinematic (end of story), boss scenes other than Harmonie
+(locked), minigame health, profile portraits and icons (same mechanism as frames), boss minion lines (all battles
+with minions are locked; the 23 minion types come from the extracted BossMinionView data).
+Described in the review buffer: 76 tutorial demo videos (templates filled with the game's monster names), the two
+in-song portraits (27 portrait ids, reactions mirrored from RRPortraitView, rivals inverted), 23 boss minion types,
+menu, song list (4 difficulties), story mode (6 chapter panels, 4 stage-type banners, backdrop) and profile backdrops.
+Dot and stripe patterns map to the one menu backdrop line. Left out on purpose: masks (invisible), plain panels, bars
+and row backers (UI chrome; their content is read as text).
+Checks: `python tools/check-art.py` (needs the gitignored game/assets/video/tut export): 76 videos, 27 portrait ids, 23 minion types and 129
+portrait/alias keys all resolve. In game, with Debug logging, every Alt+Up logs "Undescribed visible picture" for each
+visible large image without a description; toured main menu, song list, story mode, Extras, profile: only chrome left.
+
 ## Next steps
 1. Listening test by the user: Fundamentos tutorial, then Disco Disaster Easy by ear. Tune cue volume, music volume,
    lead and timing offset in F10 if needed.

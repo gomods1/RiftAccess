@@ -15,6 +15,7 @@ param(
     [string]$ProcessName = "RiftOfTheNecroDancer",
     [switch]$Ctrl,
     [switch]$Shift,
+    [switch]$Alt,
     [int]$HoldMs = 60
 )
 
@@ -153,8 +154,10 @@ Start-Sleep -Milliseconds 700
 
 $LCTRL = 0x1D
 $LSHIFT = 0x2A
+$LALT = 0x38
 if ($Ctrl) { $null = [Win32Input]::Hold([ushort]$LCTRL, $false, $true) }
 if ($Shift) { $null = [Win32Input]::Hold([ushort]$LSHIFT, $false, $true) }
+if ($Alt) { $null = [Win32Input]::Hold([ushort]$LALT, $false, $true) }
 try {
     foreach ($key in $Keys) {
         $k = $key.ToUpperInvariant()
@@ -172,8 +175,9 @@ try {
     }
 }
 finally {
+    if ($Alt) { $null = [Win32Input]::Hold([ushort]$LALT, $false, $false) }
     if ($Shift) { $null = [Win32Input]::Hold([ushort]$LSHIFT, $false, $false) }
     if ($Ctrl) { $null = [Win32Input]::Hold([ushort]$LCTRL, $false, $false) }
 }
-$mods = @(); if ($Ctrl) { $mods += 'Ctrl' }; if ($Shift) { $mods += 'Shift' }
+$mods = @(); if ($Ctrl) { $mods += 'Ctrl' }; if ($Shift) { $mods += 'Shift' }; if ($Alt) { $mods += 'Alt' }
 Write-Output ("sent: " + (($mods + ($Keys -join ',')) -join '+'))

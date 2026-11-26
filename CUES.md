@@ -18,6 +18,8 @@ the plugin. All are mono; pan and timing are applied at runtime by FMOD. Lane-co
 | click | exactly the moment to press (optional "Click on the hit beat") | everywhere, and the cue test |
 | vibe_ready | vibe power can be activated (vibraphone arpeggio + riser) | Rhythm Rift |
 | warning | health at or below the threshold (heartbeat + two falling notes) | Rhythm Rift |
+| locked | the game locked the lane keys for 1.5 beats after stray presses (latch click + low buzz) | Rhythm Rift |
+| unlocked | the lane keys work again (light click + rising two-note) | Rhythm Rift |
 | vibe_on | spare (not used yet) | |
 
 Older sound sets without tap_up / tap_down fall back to the middle sound pitched up (x1.26) or down (x0.79).

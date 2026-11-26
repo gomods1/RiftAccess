@@ -65,6 +65,9 @@ namespace RiftAccess.Core
         }
 
         private static string _lastFocus = "";
+
+        /// <summary>The last focus echo, for the review buffer's line 0.</summary>
+        public static string LastFocus => _lastFocus;
         private static float _lastFocusTime = -10f;
 
         /// <summary>Focus echo while navigating menus: interrupts only if the player chose that.</summary>
@@ -104,6 +107,7 @@ namespace RiftAccess.Core
             _lastEvent = clean;
             _lastEventTime = now;
             try { _eventLog?.WriteLine(DateTime.Now.ToString("HH:mm:ss") + " " + clean); } catch { }
+            RiftAccess.Menus.ReviewBuffers.AddEvent(clean);
             Say(clean);
         }
 

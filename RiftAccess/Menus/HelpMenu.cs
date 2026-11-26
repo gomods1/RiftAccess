@@ -58,6 +58,7 @@ namespace RiftAccess.Menus
             Add("snd.vibe", () => Cue("vibe_ready", 1));
             Add("snd.warning", () => Cue("warning", 1));
             Add("snd.click", () => Cue("click", 1));
+            Add("snd.locked", () => { Cue("locked", 1); Cue("unlocked", 1, 1.2f); });
         }
 
         private static void Read(bool atEnd)
@@ -81,6 +82,7 @@ namespace RiftAccess.Menus
                 Lines.Add(Loc.T("help.song5"));
                 Lines.Add(Loc.T("help.song6"));
                 Lines.Add(Loc.T("help.song7"));
+                Lines.Add(Loc.T("help.song8"));
             }
             else
             {
@@ -89,7 +91,9 @@ namespace RiftAccess.Menus
             }
             Lines.Add(Loc.T("help.f1"));
             Lines.Add(Loc.T("help.f2"));
+            Lines.Add(Loc.T("help.buffers"));
             Lines.Add(Loc.T("help.h"));
+            Lines.Add(Loc.T("help.h2"));
             Lines.Add(Loc.T("help.f10"));
             while (Sounds.Count < Lines.Count) Sounds.Add(null);
             AddSoundGuide();

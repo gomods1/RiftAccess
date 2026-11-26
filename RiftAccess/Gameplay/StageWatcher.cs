@@ -36,6 +36,9 @@ namespace RiftAccess.Gameplay
         /// <summary>A Rhythm Rift stage is loaded (playing, paused, game over or results).</summary>
         public static bool InStage => _stage != null || _otherStage != null || DirectionCues.InMinigame;
 
+        /// <summary>A boss battle or minigame stage rather than a Rhythm Rift board.</summary>
+        public static bool InBattle => _otherStage != null || DirectionCues.InMinigame;
+
         /// <summary>A boss battle or minigame stage (its own HUD; lane cues are not used there).</summary>
         private static UnityEngine.MonoBehaviour _otherStage;
 
@@ -126,6 +129,7 @@ namespace RiftAccess.Gameplay
             _vibeReady = false;
             _lastCombo = 0;
             _stageStartTime = Time.unscaledTime;
+            RuleWatcher.OnStageStarted();
             Plugin.LogInfo("Stage started" + (_stage != null ? "" : " (no RRStageController found)"));
         }
 
@@ -158,6 +162,7 @@ namespace RiftAccess.Gameplay
             }
             if (!Paused) DuckMusic();
             if (_stage == null) return;
+            RuleWatcher.Update(_stage);
             try
             {
                 var player = _player(_stage);
@@ -173,7 +178,10 @@ namespace RiftAccess.Gameplay
                             Plugin.LogDebug("event low health warning at " + hp);
                         }
                         if (ModConfig.AnnounceDamage.Value && SpeechAllowed && hp > 0)
-                            Speech.SayEvent(Loc.F(hurt ? "health" : "healed", hp));
+                        {
+                            string why = hurt ? RuleWatcher.TakeHurtReason() : null;
+                            Speech.SayEvent(why != null ? Loc.F("health.why", hp, why) : Loc.F(hurt ? "health" : "healed", hp));
+                        }
                     }
                     _lastHealth = hp;
                 }
@@ -206,7 +214,7 @@ namespace RiftAccess.Gameplay
         /// <summary>Hotkey readout of the HUD.</summary>
         public static string StatusText()
         {
-            if (!InSong || _stage == null) return null;
+            if (!InSong || _stage == null) return BattleWatcher.StatusText();
             var parts = new List<string>();
             var player = _player(_stage);
             if (player != null) parts.Add(Loc.F("status.health", player.CurrentHealth, player.MaxHealth));
@@ -221,6 +229,8 @@ namespace RiftAccess.Gameplay
                 if (_vibeActive(_stage)) parts.Add(Loc.T("status.vibe_active"));
                 else parts.Add(Loc.F(_vibeReady ? "status.vibe_ready" : "status.vibe", Mathf.RoundToInt(_vibe(_stage) * 100f / _vibeMax(_stage))));
             }
+            string timing = RuleWatcher.TimingText();
+            if (timing != null) parts.Add(timing);
             if (_progress != null)
             {
                 try { parts.Add(Loc.F("status.progress", Mathf.RoundToInt(_progress(_stage, LaneCues.LastCapsule.TrueBeatNumber) * 100f))); } catch { }
@@ -260,6 +270,8 @@ namespace RiftAccess.Gameplay
                 if (isNewHighScore) parts.Add(Loc.T("results.highscore"));
                 if (wasFullCombo) parts.Add(Loc.T("results.fullcombo"));
                 parts.Add(Loc.F("results.maxcombo", r.MaxComboCount));
+                string timing = RuleWatcher.TimingText();
+                if (timing != null) parts.Add(timing);
                 parts.Add(Loc.F("results.perfect", r.GetNumInputsForRating(InputRating.Perfect)));
                 parts.Add(Loc.F("results.great", r.GetNumInputsForRating(InputRating.Great)));
                 parts.Add(Loc.F("results.good", r.GetNumInputsForRating(InputRating.Good)));
